@@ -55,6 +55,7 @@ public class Galaxy {
 
     public int getWeight(int source, int destination) {
         List<Integer> key = getKey(source, destination);
+        if (source == destination) return 0;
         return galaxyGraph.getOrDefault(key, Integer.MAX_VALUE);
     }
 

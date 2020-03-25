@@ -16,16 +16,34 @@ public class HauntedAPSP {
         this.NHAPSP = new int[galaxy.getGalaxySize()][galaxy.getGalaxySize()];
     }
 
+    public void clear() {
+        NHAPSP = initializeArray();
+    }
+
+    private int[][] initializeArray(){
+        int[][] array = new int[galaxy.getGalaxySize()][galaxy.getGalaxySize()];
+        for (int i = 0; i < galaxy.getGalaxySize(); i++) {
+            Arrays.fill(array[i], Integer.MAX_VALUE);
+        }
+
+        return array;
+    }
+
 
     // A modified All Pairs Shortest Path function to find the shortest path while avoiding haunted galaxies
     // NHAPSP(i,j,k) represents the shortest path from node i to node j using intermediate nodes {1, ... , k}
     // provided the nodes are not haunted
-    public void nonHauntedShortestPath() {
+    public int nonHauntedShortestPath() {
         // generate initial path lengths for each pair of nodes
         for (int i = 1; i <= NHAPSP.length; i++) {
             for (int j = 1; j <= NHAPSP.length; j++) {
-                if (galaxy.isHaunted(i) || galaxy.isHaunted(j)) continue;
-                NHAPSP[i-1][j-1] = galaxy.getWeight(i, j);
+                if (i == j)
+                    NHAPSP[i-1][j-1] = 0;
+                else if (galaxy.isHaunted(i) || galaxy.isHaunted(j)) {
+                    NHAPSP[i-1][j-1] = Integer.MAX_VALUE;
+                }
+                else
+                    NHAPSP[i-1][j-1] = galaxy.getWeight(i, j);
             }
         }
 
@@ -34,10 +52,10 @@ public class HauntedAPSP {
             if (galaxy.isHaunted(k)) continue;
 
             int[][] previous = NHAPSP;
-            NHAPSP = new int[galaxy.getGalaxySize()][galaxy.getGalaxySize()];;
+            NHAPSP = initializeArray();
 
             for (int i = 1; i <= NHAPSP.length; i++) {
-                for (int j = 1; j <= NHAPSP.length; i++) {
+                for (int j = 1; j <= NHAPSP.length; j++) {
 
                     // Avoid using haunted galaxies
                     if (galaxy.isHaunted(i) || galaxy.isHaunted(j)) continue;
@@ -54,6 +72,8 @@ public class HauntedAPSP {
                 }
             }
         }
+
+        return NHAPSP[0][galaxy.getGalaxySize()-1];
     }
 
 
@@ -64,24 +84,37 @@ public class HauntedAPSP {
         // get base case SPTKH(i,j,0) stored in NHAPSP variable
         nonHauntedShortestPath();
 
-        int[][] SPTKH = NHAPSP;
+        // add costs 
+        for (int i = 1; i <= galaxy.getGalaxySize(); i++){
+            for (int j = 1; j <= galaxy.getGalaxySize(); j++) {
+                NHAPSP[i-1][j-1] = galaxy.getWeight(i, j);
+            }
+        }
+
+        // Initialize array to store current shortest paths through k haunted galaxies
+        int[][] SPTKH = new int[galaxy.getGalaxySize()][galaxy.getGalaxySize()];
+        for (int i = 0; i < galaxy.getGalaxySize(); i++)
+            for (int j = 0; j < galaxy.getGalaxySize(); j++)
+                SPTKH[i][j] = NHAPSP[i][j];
+
+
+        // Go through adding one haunted galaxy at a time and storing every possible shortest path
         for (int k = 1; k <= maxHaunted; k++) {
             int[][] previous = SPTKH;
-            SPTKH = new int[galaxy.getGalaxySize()][galaxy.getGalaxySize()];
+            SPTKH = initializeArray();
 
             for (int i = 1; i <= galaxy.getGalaxySize(); i++) {
                 for (int j = 1; j <= galaxy.getGalaxySize(); j++) {
 
                     // SPTKH(i,j,k) = min{SPTKH(i,z,k-1) + SPTKH(z,j,0)} for all z in {1, ... , n}
                     // Pick the shortest path using every possible node as an intermediate and pick the smallest
-                    List<Integer> paths = new ArrayList<>();
+                    int min = Integer.MAX_VALUE;
                     for (int z = 1; z <= galaxy.getGalaxySize(); z++) {
-                        if (previous[i-1][z-1] == Integer.MAX_VALUE || NHAPSP[z-1][j-1] == Integer.MAX_VALUE)
-                            paths.add(Integer.MAX_VALUE); // avoid an overflow when adding a max value int
-                        else
-                            paths.add(previous[i-1][z-1] + NHAPSP[z-1][j-1]);
+                        int sum = previous[i-1][z-1] + NHAPSP[z-1][j-1];
+                        if (sum < min && sum >= 0 )
+                            min = previous[i-1][z-1] + NHAPSP[z-1][j-1];
                     }
-                    SPTKH[i-1][j-1] = Collections.min(paths);
+                    SPTKH[i-1][j-1] = min;
                 }
             }
         }
