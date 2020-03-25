@@ -84,7 +84,7 @@ public class HauntedAPSP {
         // get base case SPTKH(i,j,0) stored in NHAPSP variable
         nonHauntedShortestPath();
 
-        // add costs 
+        // add c(i,j) for haunted galaxies to base case
         for (int i = 1; i <= galaxy.getGalaxySize(); i++){
             for (int j = 1; j <= galaxy.getGalaxySize(); j++) {
                 NHAPSP[i-1][j-1] = galaxy.getWeight(i, j);
@@ -121,7 +121,6 @@ public class HauntedAPSP {
 
         // Return SPTKH(1, n, k) which stores the shortest path from 1 to n through k haunted galaxies
         return SPTKH[0][galaxy.getGalaxySize() - 1];
-
     }
 
 }
