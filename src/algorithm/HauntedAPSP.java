@@ -20,6 +20,7 @@ public class HauntedAPSP {
         baseCase = initializeArray();
     }
 
+    // Utility function to create a new n+1 by n+1 array filled with Max integer values
     private int[][] initializeArray(){
         int[][] array = new int[galaxy.getGalaxySize() + 1][galaxy.getGalaxySize() + 1];
         for (int i = 0; i <= galaxy.getGalaxySize(); i++) {
@@ -51,10 +52,12 @@ public class HauntedAPSP {
 
         // Allow for paths using nodes {1, ..., k} between nodes i and j
         for (int k = 1; k < galaxy.getGalaxySize(); k++) {
+            // avoid haunted galaxies
             if (galaxy.isHaunted(k)) {
                 continue;
             }
 
+            // use two arrays to save space as we only consider values from the {1, ..., k-1} case
             int[][] previous = baseCase;
             baseCase = initializeArray();
 
@@ -73,6 +76,7 @@ public class HauntedAPSP {
                         baseCase[i][j] = previous[i][j];
                     }
                     else {
+                        // we either use the intermediate node k or we take the path directly from i to j
                         baseCase[i][j] = Math.min(galaxy.getWeight(i,j), galaxy.getWeight(i,k) + galaxy.getWeight(k,j));
                     }
 
@@ -91,7 +95,7 @@ public class HauntedAPSP {
         // get base case SPTKH(i,j,0) stored in NHAPSP variable
         nonHauntedShortestPath();
 
-        // add c(i,j) for haunted galaxies to base case
+        // add c(i,j) for haunted galaxies to base case if they are smaller than the current shortest path from i to j
         for (int i = 1; i <= galaxy.getGalaxySize(); i++){
             for (int j = 1; j <= galaxy.getGalaxySize(); j++) {
                 baseCase[i][j] = Math.min( galaxy.getWeight(i, j), baseCase[i][j]);
@@ -106,9 +110,9 @@ public class HauntedAPSP {
             }
         }
 
-
         // Go through adding one haunted galaxy at a time and storing every possible shortest path between i and j
         for (int k = 1; k <= maxHaunted; k++) {
+            // Save space by saving k-1 answer and making a new array for k-th answers
             int[][] previousPath = shortestPath;
             shortestPath = initializeArray();
 
